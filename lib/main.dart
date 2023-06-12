@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         'map_page':(context) => MapPage(), 
       },
 
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.grey[200]
       ),
     );
