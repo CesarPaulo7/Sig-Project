@@ -3,10 +3,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+//import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart'; 
+//import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 //import 'package:sig_project/widget/CustomTextField.dart';
 import '../class/map_marker.dart';
+import '../services/map_Services.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -33,16 +36,17 @@ class _MyPage2State extends State<MapPage> {
 
   LatLng? MyUbicacion;
 
-  //
+  /////////////
 
   final TextEditingController _searchController= TextEditingController();
   List<MapMarker> _filteredMarkers = [];
   bool showList= true;
+  bool showMarkers= true;
 
  @override
   void initState(){
     super.initState();
-    _filteredMarkers= mapMarkers;
+    
   }
 
   //Markers seleccionado
@@ -52,6 +56,7 @@ class _MyPage2State extends State<MapPage> {
         mapMarkers[i].isSelected = (i == index);
       }
       showList=false;
+      
     });
   }
 
@@ -61,12 +66,12 @@ class _MyPage2State extends State<MapPage> {
       _filteredMarkers = mapMarkers.where((marker) => 
         marker.address.toLowerCase().contains(searchText.toLowerCase()) ||
         marker.title.toLowerCase().contains(searchText.toLowerCase())).toList();
-
+     
     });
   }
 
   //DETERMINAR Y HALLAR MI POSICION
-  Future <Position>  _determinePosition() async{
+ /* Future <Position>  _determinePosition() async{
     LocationPermission permission;
     permission= await Geolocator.checkPermission();
     if(permission == LocationPermission.denied){
@@ -76,7 +81,7 @@ class _MyPage2State extends State<MapPage> {
       }
     }
    return await Geolocator.getCurrentPosition();
-  }
+  }*/
 
  // void getCurrentLocation () async {
  //    Position position = await _determinePosition();
@@ -84,7 +89,7 @@ class _MyPage2State extends State<MapPage> {
  //    print(position.longitude);
  // }
 
-   Future<void> getCurrentLocation () async {
+   /*Future<void> getCurrentLocation () async {
      Position position = await _determinePosition();
      print(position.latitude);
      print(position.longitude);
@@ -92,7 +97,7 @@ class _MyPage2State extends State<MapPage> {
      setState(() {
        MyUbicacion = LatLng(position.latitude, position.longitude);
      });
-  }
+  }*/
   //*********************************** */
 
     MapController movController= MapController();
@@ -134,33 +139,31 @@ class _MyPage2State extends State<MapPage> {
                                         ],
                                       ):SizedBox(),
 
-                                   // PolylineLayer(
-                                   //   polylines: Polylines.sublist(0),
-                                   // ),
-
-                                    MarkerLayer(
-                                      
-                                      markers: _filteredMarkers.map((e) {
-                                              return Marker(
-                                                      point: e.location, 
-                                                      builder: (ctx) {
-                                                              final color= e.isSelected ? Colors.red[700] : Colors.blue;
-            
-                                                                return IconButton(
-                                                                    color: color, 
-                                                                    onPressed: (){
-                                                                      print('Click');                                       
-                                                                    }, 
-                                                                  
-                                                                    icon: Icon(Icons.location_on)
-                                                                    );
-                                                        }
-                                                                  
-                                                    );
-                                                }).toList()
-                                      )
-                                  ],
-                  
+                                 //   PolylineLayer(
+                                 //     polylines: Polylines.sublist(0),
+                                //    ),
+                                    MarkerLayer(                                      
+                                        markers: _filteredMarkers.where((e) => e.isSelected) .map((e){
+                                                return Marker(
+                                                        point: e.location, 
+                                                        builder: (ctx) {
+                                                                final color= e.isSelected ? Colors.red[700] : Colors.blue;
+                                                                
+                                                                  return IconButton(
+                                                                      color: color, 
+                                                                      onPressed: (){
+                                                                        print('Click');    
+                                                                        _selectMarker(mapMarkers.indexOf(e));                                   
+                                                                      }, 
+                                                                    
+                                                                      icon: Icon(Icons.location_on) 
+                                                                      );
+                                                          }                                                                 
+                                                      );
+                                                  }).toList()
+                                        ),
+                                    
+                                  ],                  
                     ),
 
                     Positioned(
@@ -228,16 +231,18 @@ class _MyPage2State extends State<MapPage> {
                                                 return ListTile(
                                                           title: Text(marker.title),
                                                           subtitle: Text(marker.address),
-                                                          onTap: () {
+                                                          onTap: () async {
                                                           // Acción al hacer clic en el marcador de la lista
                                                             print('Clic en el marcador de la lista: ${marker.title}');
+
+                                                             
                                                             _selectMarker(mapMarkers.indexOf(marker));                                        
                                                           },
                                                           leading: Icon( Icons.location_on, color: color,),
                                                           
                                                       );
                                                
-                                                      },
+                                                },
                                         )
                                        
                                         : SizedBox(),                 
@@ -253,8 +258,12 @@ class _MyPage2State extends State<MapPage> {
               
               floatingActionButton: FloatingActionButton(
                                   onPressed: () async{
-                                      await getCurrentLocation();
+                  //                    await getCurrentLocation();
                                       moverCamara(MyUbicacion!);
+                                      LatLng start=LatLng(-17.776758935241386, -63.19574540522205);
+                                      LatLng end= LatLng(-17.775165143261425,-63.195107039476504);
+
+                                     List<LatLng> rc= await MapServices.getRouteCoordinates(start,end);
                                     }, 
                                   child:Icon(Icons.location_searching)
                                   )
